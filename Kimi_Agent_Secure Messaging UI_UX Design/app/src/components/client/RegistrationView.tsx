@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { GlassCard } from '@/components/common/GlassCard';
-import { GlowButton } from '@/components/common/GlowButton';
-import { 
-  Smartphone, 
-  ChevronDown, 
+import React, { useState } from "react";
+import { GlassCard } from "@/components/common/GlassCard";
+import { GlowButton } from "@/components/common/GlowButton";
+import {
+  Smartphone,
+  ChevronDown,
   Check,
   Shield,
   Lock,
@@ -12,25 +12,34 @@ import {
   Camera,
   CheckCircle,
   ArrowRight,
-  RefreshCw
-} from 'lucide-react';
-import { countryCodes } from '@/data/mockData';
+  RefreshCw,
+} from "lucide-react";
+import { countryCodes } from "@/data/mockData";
 
 interface RegistrationViewProps {
   onComplete?: () => void;
 }
 
-type Step = 'phone' | 'verify' | 'device' | 'profile' | 'complete';
+type Step = "phone" | "verify" | "device" | "profile" | "complete";
 
-export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState<Step>('phone');
+export const RegistrationView: React.FC<RegistrationViewProps> = ({
+  onComplete,
+}) => {
+  const [currentStep, setCurrentStep] = useState<Step>("phone");
   const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
-  const [deviceCode, setDeviceCode] = useState('');
-  const [profileName, setProfileName] = useState('');
-  const [profileStatus, setProfileStatus] = useState('disponible');
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
+  const [deviceCode, setDeviceCode] = useState("");
+  const [profileName, setProfileName] = useState("");
+  const [profileStatus, setProfileStatus] = useState("disponible");
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePhoneSubmit = () => {
@@ -38,18 +47,18 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
-        setCurrentStep('verify');
+        setCurrentStep("verify");
       }, 1500);
     }
   };
 
   const handleVerifySubmit = () => {
-    const code = verificationCode.join('');
+    const code = verificationCode.join("");
     if (code.length === 6) {
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
-        setCurrentStep('device');
+        setCurrentStep("device");
       }, 1500);
     }
   };
@@ -59,7 +68,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
-        setCurrentStep('profile');
+        setCurrentStep("profile");
       }, 1500);
     }
   };
@@ -69,7 +78,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
-        setCurrentStep('complete');
+        setCurrentStep("complete");
       }, 1500);
     }
   };
@@ -79,7 +88,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
       const newCode = [...verificationCode];
       newCode[index] = value;
       setVerificationCode(newCode);
-      
+
       // Auto-focus next input
       if (value && index < 5) {
         const nextInput = document.getElementById(`code-${index + 1}`);
@@ -89,35 +98,37 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
   };
 
   const steps = [
-    { id: 'phone', label: 'Teléfono', icon: Smartphone },
-    { id: 'verify', label: 'Verificación', icon: Shield },
-    { id: 'device', label: 'Dispositivo', icon: Lock },
-    { id: 'profile', label: 'Perfil', icon: User },
+    { id: "phone", label: "Teléfono", icon: Smartphone },
+    { id: "verify", label: "Verificación", icon: Shield },
+    { id: "device", label: "Dispositivo", icon: Lock },
+    { id: "profile", label: "Perfil", icon: User },
   ];
 
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
       {steps.map((step, index) => {
-        const isActive = steps.findIndex(s => s.id === currentStep) >= index;
+        const isActive = steps.findIndex((s) => s.id === currentStep) >= index;
         const isCurrent = step.id === currentStep;
-        
+
         return (
           <React.Fragment key={step.id}>
-            <div 
+            <div
               className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
-                isCurrent 
-                  ? 'bg-secure-lilac text-secure-black'
-                  : isActive 
-                    ? 'bg-secure-lilac/30 text-secure-lilac'
-                    : 'bg-white/5 text-gray-500'
+                isCurrent
+                  ? "bg-secure-lilac text-secure-black"
+                  : isActive
+                  ? "bg-secure-lilac/30 text-secure-lilac"
+                  : "bg-white/5 text-gray-500"
               }`}
             >
               <step.icon className="w-5 h-5" />
             </div>
             {index < steps.length - 1 && (
-              <div className={`w-8 h-0.5 ${
-                isActive ? 'bg-secure-lilac/50' : 'bg-white/10'
-              }`} />
+              <div
+                className={`w-8 h-0.5 ${
+                  isActive ? "bg-secure-lilac/50" : "bg-white/10"
+                }`}
+              />
             )}
           </React.Fragment>
         );
@@ -153,11 +164,13 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
                 <p className="text-sm text-gray-400">{selectedCountry.code}</p>
               </div>
             </div>
-            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${
-              showCountryDropdown && 'rotate-180'
-            }`} />
+            <ChevronDown
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                showCountryDropdown && "rotate-180"
+              }`}
+            />
           </button>
-          
+
           {showCountryDropdown && (
             <div className="absolute top-full left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-secure-gray-dark border border-secure-purple/30 rounded-xl z-10 scrollbar-custom">
               {countryCodes.map((country) => (
@@ -186,7 +199,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
           <input
             type="tel"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
             placeholder="555 123 4567"
             className="flex-1 p-4 bg-secure-gray-medium border border-secure-purple/30 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-secure-lilac/50 transition-all"
           />
@@ -216,7 +229,8 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
           Verifica tu número
         </h3>
         <p className="text-sm text-gray-400">
-          Ingresa el código de 6 dígitos enviado a {selectedCountry.code} {phoneNumber}
+          Ingresa el código de 6 dígitos enviado a {selectedCountry.code}{" "}
+          {phoneNumber}
         </p>
       </div>
 
@@ -245,7 +259,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
         className="w-full"
         onClick={handleVerifySubmit}
         loading={isLoading}
-        disabled={verificationCode.join('').length !== 6}
+        disabled={verificationCode.join("").length !== 6}
       >
         Verificar
         <Check className="w-5 h-5" />
@@ -263,14 +277,17 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
           Vincula tu dispositivo
         </h3>
         <p className="text-sm text-gray-400">
-          Ingresa el código de vinculación para activar el cifrado de extremo a extremo
+          Ingresa el código de vinculación para activar el cifrado de extremo a
+          extremo
         </p>
       </div>
 
       <div className="bg-secure-purple/20 border border-secure-lilac/30 rounded-xl p-4">
         <div className="flex items-center gap-3 mb-3">
           <Key className="w-5 h-5 text-secure-lilac" />
-          <span className="text-sm text-secure-lilac">Código de vinculación</span>
+          <span className="text-sm text-secure-lilac">
+            Código de vinculación
+          </span>
         </div>
         <input
           type="text"
@@ -344,17 +361,17 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
         <label className="block text-sm text-gray-400 mb-2">Estado</label>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { value: 'disponible', label: 'Disponible', color: 'bg-green-500' },
-            { value: 'ocupado', label: 'Ocupado', color: 'bg-red-500' },
-            { value: 'ausente', label: 'Ausente', color: 'bg-yellow-500' },
+            { value: "disponible", label: "Disponible", color: "bg-green-500" },
+            { value: "ocupado", label: "Ocupado", color: "bg-red-500" },
+            { value: "ausente", label: "Ausente", color: "bg-yellow-500" },
           ].map((status) => (
             <button
               key={status.value}
               onClick={() => setProfileStatus(status.value)}
               className={`flex items-center gap-2 p-3 rounded-xl transition-all ${
                 profileStatus === status.value
-                  ? 'bg-secure-lilac/20 border border-secure-lilac/50'
-                  : 'bg-white/5 hover:bg-white/10'
+                  ? "bg-secure-lilac/20 border border-secure-lilac/50"
+                  : "bg-white/5 hover:bg-white/10"
               }`}
             >
               <span className={`w-3 h-3 rounded-full ${status.color}`} />
@@ -382,7 +399,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
       <div className="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
         <CheckCircle className="w-10 h-10 text-green-400" />
       </div>
-      
+
       <div>
         <h3 className="text-2xl font-semibold text-white mb-2">
           ¡Registro completado!
@@ -399,16 +416,14 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
           </div>
           <div className="text-left">
             <p className="font-medium text-white">Cifrado activado</p>
-            <p className="text-sm text-gray-400">Tus mensajes están protegidos</p>
+            <p className="text-sm text-gray-400">
+              Tus mensajes están protegidos
+            </p>
           </div>
         </div>
       </GlassCard>
 
-      <GlowButton
-        variant="primary"
-        className="w-full"
-        onClick={onComplete}
-      >
+      <GlowButton variant="primary" className="w-full" onClick={onComplete}>
         Comenzar a chatear
         <ArrowRight className="w-5 h-5" />
       </GlowButton>
@@ -418,13 +433,13 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({ onComplete }
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-secure-black via-secure-purple/20 to-secure-black">
       <GlassCard className="w-full max-w-md p-8">
-        {currentStep !== 'complete' && renderStepIndicator()}
-        
-        {currentStep === 'phone' && renderPhoneStep()}
-        {currentStep === 'verify' && renderVerifyStep()}
-        {currentStep === 'device' && renderDeviceStep()}
-        {currentStep === 'profile' && renderProfileStep()}
-        {currentStep === 'complete' && renderCompleteStep()}
+        {currentStep !== "complete" && renderStepIndicator()}
+
+        {currentStep === "phone" && renderPhoneStep()}
+        {currentStep === "verify" && renderVerifyStep()}
+        {currentStep === "device" && renderDeviceStep()}
+        {currentStep === "profile" && renderProfileStep()}
+        {currentStep === "complete" && renderCompleteStep()}
       </GlassCard>
     </div>
   );

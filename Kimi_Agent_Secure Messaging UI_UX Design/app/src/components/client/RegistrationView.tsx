@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { GlassCard } from "@/components/common/GlassCard";
 import { GlowButton } from "@/components/common/GlowButton";
 import {
@@ -13,20 +14,253 @@ import {
   CheckCircle,
   ArrowRight,
   RefreshCw,
+  MessageSquare,
+  X,
+  Phone,
 } from "lucide-react";
 import { countryCodes } from "@/data/mockData";
+
+// URL del backend OTP
+const OTP_SERVICE = "https://cr4j9v-5000.csb.app";
+
+// Longitudes de teléfono por país
+const phoneLengths: Record<string, number> = {
+  "+1": 10,
+  "+52": 10,
+  "+54": 10,
+  "+55": 11,
+  "+57": 10,
+  "+506": 8, // Costa Rica: 8 dígitos
+  "+56": 9,
+  "+58": 10,
+  "+51": 9,
+  "+591": 8,
+  "+593": 9,
+  "+595": 9,
+  "+598": 8,
+  "+34": 9,
+  "+44": 10,
+  "+49": 10,
+  "+33": 9,
+  "+39": 10,
+  "+81": 10,
+  "+86": 11,
+  "+91": 10,
+};
+
+// Placeholders por país
+const phonePlaceholders: Record<string, string> = {
+  "+1": "555 123 4567",
+  "+506": "8888 0000", // Costa Rica
+  "+52": "555 123 4567",
+  "+54": "911 2345 6789",
+  "+57": "312 345 6789",
+  "+34": "612 345 678",
+  "+44": "7911 123456",
+};
 
 interface RegistrationViewProps {
   onComplete?: () => void;
 }
 
-type Step = "phone" | "verify" | "device" | "profile" | "complete";
+type Step = "phone" | "verify" | "profile" | "complete";
+
+// Notificación de SMS (igual que en Login)
+const SMSNotification: React.FC<{
+  code: string;
+  visible: boolean;
+  onClose: () => void;
+}> = ({ code, visible, onClose }) => {
+  useEffect(() => {
+    if (!visible) return;
+    const t = setTimeout(onClose, 15000);
+    return () => clearTimeout(t);
+  }, [visible, onClose]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 20,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 9999,
+        width: "100%",
+        maxWidth: 380,
+        animation: "slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
+    >
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateX(-50%) translateY(-24px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+      `}</style>
+      <div
+        style={{
+          margin: "0 16px",
+          background: "rgba(18, 10, 35, 0.98)",
+          border: "1px solid rgba(139, 92, 246, 0.4)",
+          borderRadius: 20,
+          overflow: "hidden",
+          boxShadow:
+            "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.1)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "14px 16px 10px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: "linear-gradient(135deg, #8b5cf6, #6d28d9)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MessageSquare size={16} color="white" />
+            </div>
+            <div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "white",
+                }}
+              >
+                NextTalk
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.4)",
+                }}
+              >
+                ahora mismo
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "none",
+              borderRadius: "50%",
+              width: 28,
+              height: 28,
+              cursor: "pointer",
+            }}
+          >
+            <X size={13} color="rgba(255,255,255,0.5)" />
+          </button>
+        </div>
+
+        <div
+          style={{
+            height: 1,
+            background: "rgba(255,255,255,0.06)",
+            margin: "0 16px",
+          }}
+        />
+
+        <div style={{ padding: "14px 16px 8px" }}>
+          <p
+            style={{
+              margin: "0 0 4px",
+              fontSize: 13,
+              color: "rgba(255,255,255,0.75)",
+            }}
+          >
+            👋 ¡Hola! Tu código de verificación es:
+          </p>
+          <div
+            style={{
+              background: "rgba(139, 92, 246, 0.12)",
+              border: "1px solid rgba(139, 92, 246, 0.35)",
+              borderRadius: 14,
+              padding: "14px 0",
+              display: "flex",
+              justifyContent: "center",
+              gap: 10,
+            }}
+          >
+            {code.split("").map((d, i) => (
+              <span
+                key={i}
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  color: "white",
+                  fontFamily: "monospace",
+                  letterSpacing: 2,
+                  textShadow: "0 0 20px rgba(139,92,246,0.8)",
+                }}
+              >
+                {d}
+              </span>
+            ))}
+          </div>
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 11,
+              color: "rgba(255,255,255,0.3)",
+              textAlign: "center",
+            }}
+          >
+            Válido 10 min · No compartas este código
+          </p>
+        </div>
+
+        <div
+          style={{
+            margin: "10px 16px 14px",
+            height: 3,
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 999,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              borderRadius: 999,
+              width: "100%",
+              background: "linear-gradient(90deg, #8b5cf6, #a78bfa)",
+              animation: "shrink 15s linear forwards",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const RegistrationView: React.FC<RegistrationViewProps> = ({
   onComplete,
 }) => {
+  const { register } = useAuth();
   const [currentStep, setCurrentStep] = useState<Step>("phone");
-  const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
+
+  // Costa Rica por defecto (como en Login)
+  const [selectedCountry, setSelectedCountry] = useState(
+    countryCodes.find((c) => c.code === "+506") || countryCodes[0]
+  );
+
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState([
@@ -37,49 +271,125 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
     "",
     "",
   ]);
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [showNotification, setShowNotification] = useState(false);
   const [deviceCode, setDeviceCode] = useState("");
   const [profileName, setProfileName] = useState("");
   const [profileStatus, setProfileStatus] = useState("disponible");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handlePhoneSubmit = () => {
-    if (phoneNumber.length >= 10) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        setCurrentStep("verify");
-      }, 1500);
+  // Calcular valores derivados
+  const minLength = phoneLengths[selectedCountry.code] ?? 8;
+  const placeholder = phonePlaceholders[selectedCountry.code] ?? "000 000 000";
+  const fullPhone = `${selectedCountry.code}${phoneNumber}`;
+
+  const steps = [
+    { id: "phone", label: "Teléfono", icon: Smartphone },
+    { id: "verify", label: "Verificación", icon: Shield },
+    { id: "device", label: "Dispositivo", icon: Lock },
+    { id: "profile", label: "Perfil", icon: User },
+  ];
+
+  // Enviar código OTP al backend
+  const handlePhoneSubmit = async () => {
+    setError("");
+
+    if (phoneNumber.length < minLength) {
+      setError(`El número debe tener ${minLength} dígitos`);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(`${OTP_SERVICE}/api/otp/send-register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || data.error || "No se pudo enviar el código");
+        return;
+      }
+
+      // Mostrar código en notificación
+      setGeneratedCode(data.code);
+      setShowNotification(true);
+      setCurrentStep("verify");
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleVerifySubmit = () => {
+  // Verificar código
+  const handleVerifySubmit = async () => {
+    setError("");
     const code = verificationCode.join("");
-    if (code.length === 6) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        setCurrentStep("device");
-      }, 1500);
+
+    if (code.length !== 6) {
+      setError("Ingresa el código completo");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Después
+      const res = await fetch(`${OTP_SERVICE}/api/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone, code }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Código incorrecto");
+        return;
+      }
+
+      setShowNotification(false);
+      setCurrentStep("profile");
+    } catch (err) {
+      setError("Error al verificar el código");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeviceSubmit = () => {
     if (deviceCode.length >= 6) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        setCurrentStep("profile");
-      }, 1500);
+      setCurrentStep("profile");
     }
   };
 
-  const handleProfileSubmit = () => {
-    if (profileName.trim()) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        setCurrentStep("complete");
-      }, 1500);
+  const handleProfileSubmit = async () => {
+    if (!profileName.trim()) return;
+
+    setIsLoading(true);
+
+    try {
+      // Generar clave pública mock (en producción sería real)
+      const publicKey = `key-${Date.now()}`;
+
+      await register({
+        phone: fullPhone,
+        name: profileName,
+        deviceCode: deviceCode || "DEV-MODE",
+        publicKey,
+      });
+
+      setCurrentStep("complete");
+    } catch (err) {
+      setError("Error al completar el registro");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,20 +399,23 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
       newCode[index] = value;
       setVerificationCode(newCode);
 
-      // Auto-focus next input
       if (value && index < 5) {
-        const nextInput = document.getElementById(`code-${index + 1}`);
-        nextInput?.focus();
+        document.getElementById(`reg-code-${index + 1}`)?.focus();
       }
     }
   };
 
-  const steps = [
-    { id: "phone", label: "Teléfono", icon: Smartphone },
-    { id: "verify", label: "Verificación", icon: Shield },
-    { id: "device", label: "Dispositivo", icon: Lock },
-    { id: "profile", label: "Perfil", icon: User },
-  ];
+  const handleCodePaste = (e: React.ClipboardEvent) => {
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (pasted.length === 6) {
+      e.preventDefault();
+      setVerificationCode(pasted.split(""));
+      document.getElementById("reg-code-5")?.focus();
+    }
+  };
 
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
@@ -179,6 +492,7 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
                   onClick={() => {
                     setSelectedCountry(country);
                     setShowCountryDropdown(false);
+                    setPhoneNumber(""); // Limpiar al cambiar país
                   }}
                   className="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
                 >
@@ -191,19 +505,27 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
           )}
         </div>
 
-        {/* Phone input */}
+        {/* Phone input - CORREGIDO */}
         <div className="flex gap-3">
-          <div className="flex-shrink-0 w-24 p-4 bg-secure-gray-medium border border-secure-purple/30 rounded-xl text-white text-center">
-            {selectedCountry.code}
+          <div className="flex-shrink-0 px-4 py-4 bg-secure-gray-medium border border-secure-purple/30 rounded-xl text-white flex items-center gap-2">
+            <Phone className="w-4 h-4 text-secure-lilac" />
+            <span>{selectedCountry.code}</span>
           </div>
           <input
             type="tel"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-            placeholder="555 123 4567"
+            placeholder={placeholder}
+            maxLength={minLength}
             className="flex-1 p-4 bg-secure-gray-medium border border-secure-purple/30 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-secure-lilac/50 transition-all"
           />
         </div>
+
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400 text-center">
+            {error}
+          </div>
+        )}
       </div>
 
       <GlowButton
@@ -211,9 +533,9 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
         className="w-full"
         onClick={handlePhoneSubmit}
         loading={isLoading}
-        disabled={phoneNumber.length < 10}
+        disabled={phoneNumber.length < minLength}
       >
-        Continuar
+        Enviar código
         <ArrowRight className="w-5 h-5" />
       </GlowButton>
     </div>
@@ -229,27 +551,49 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
           Verifica tu número
         </h3>
         <p className="text-sm text-gray-400">
-          Ingresa el código de 6 dígitos enviado a {selectedCountry.code}{" "}
-          {phoneNumber}
+          Ingresa el código de 6 dígitos enviado a<br />
+          <span className="text-secure-lilac font-medium">{fullPhone}</span>
         </p>
       </div>
+
+      {!showNotification && generatedCode && (
+        <button
+          onClick={() => setShowNotification(true)}
+          className="w-full flex items-center justify-center gap-2 p-3 bg-secure-lilac/10 border border-secure-lilac/30 rounded-lg text-secure-lilac text-sm"
+        >
+          <MessageSquare className="w-4 h-4" />
+          Ver notificación con mi código
+        </button>
+      )}
 
       <div className="flex justify-center gap-2">
         {verificationCode.map((digit, index) => (
           <input
             key={index}
-            id={`code-${index}`}
+            id={`reg-code-${index}`}
             type="text"
+            inputMode="numeric"
             value={digit}
             onChange={(e) => handleCodeChange(index, e.target.value)}
+            onPaste={handleCodePaste}
             maxLength={1}
             className="w-12 h-14 text-center text-2xl font-bold bg-secure-gray-medium border border-secure-purple/30 rounded-xl text-white focus:outline-none focus:border-secure-lilac focus:ring-2 focus:ring-secure-lilac/30 transition-all"
           />
         ))}
       </div>
 
+      {error && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400 text-center">
+          {error}
+        </div>
+      )}
+
       <div className="text-center">
-        <button className="text-sm text-secure-lilac hover:underline">
+        <button
+          onClick={handlePhoneSubmit}
+          disabled={isLoading}
+          className="text-sm text-secure-lilac hover:underline"
+        >
           ¿No recibiste el código? Reenviar
         </button>
       </div>
@@ -264,57 +608,20 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
         Verificar
         <Check className="w-5 h-5" />
       </GlowButton>
-    </div>
-  );
-
-  const renderDeviceStep = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secure-lilac/20 flex items-center justify-center">
-          <Lock className="w-8 h-8 text-secure-lilac" />
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-2">
-          Vincula tu dispositivo
-        </h3>
-        <p className="text-sm text-gray-400">
-          Ingresa el código de vinculación para activar el cifrado de extremo a
-          extremo
-        </p>
-      </div>
-
-      <div className="bg-secure-purple/20 border border-secure-lilac/30 rounded-xl p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <Key className="w-5 h-5 text-secure-lilac" />
-          <span className="text-sm text-secure-lilac">
-            Código de vinculación
-          </span>
-        </div>
-        <input
-          type="text"
-          value={deviceCode}
-          onChange={(e) => setDeviceCode(e.target.value.toUpperCase())}
-          placeholder="XXXX-XXXX-XXXX"
-          className="w-full p-4 bg-secure-black/50 border border-secure-purple/30 rounded-xl text-white text-center text-2xl font-mono tracking-wider placeholder:text-gray-600 focus:outline-none focus:border-secure-lilac/50 transition-all"
-        />
-      </div>
 
       <div className="text-center">
-        <button className="flex items-center gap-2 mx-auto text-sm text-secure-lilac hover:underline">
-          <RefreshCw className="w-4 h-4" />
-          Generar nuevo código
+        <button
+          onClick={() => {
+            setCurrentStep("phone");
+            setVerificationCode(["", "", "", "", "", ""]);
+            setError("");
+            setShowNotification(false);
+          }}
+          className="text-sm text-gray-400 hover:text-white"
+        >
+          ← Cambiar número
         </button>
       </div>
-
-      <GlowButton
-        variant="primary"
-        className="w-full"
-        onClick={handleDeviceSubmit}
-        loading={isLoading}
-        disabled={deviceCode.length < 6}
-      >
-        Vincular dispositivo
-        <ArrowRight className="w-5 h-5" />
-      </GlowButton>
     </div>
   );
 
@@ -381,6 +688,12 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
         </div>
       </div>
 
+      {error && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400 text-center">
+          {error}
+        </div>
+      )}
+
       <GlowButton
         variant="primary"
         className="w-full"
@@ -432,12 +745,17 @@ export const RegistrationView: React.FC<RegistrationViewProps> = ({
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-secure-black via-secure-purple/20 to-secure-black">
+      <SMSNotification
+        code={generatedCode}
+        visible={showNotification}
+        onClose={() => setShowNotification(false)}
+      />
+
       <GlassCard className="w-full max-w-md p-8">
         {currentStep !== "complete" && renderStepIndicator()}
 
         {currentStep === "phone" && renderPhoneStep()}
         {currentStep === "verify" && renderVerifyStep()}
-        {currentStep === "device" && renderDeviceStep()}
         {currentStep === "profile" && renderProfileStep()}
         {currentStep === "complete" && renderCompleteStep()}
       </GlassCard>

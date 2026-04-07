@@ -1,7 +1,12 @@
 {
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "jsonwebtoken": "^9.0.3"
   }
 }

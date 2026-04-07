@@ -506,6 +506,7 @@ export const mockAIInteractions: AIInteraction[] = [
 
 // Country codes
 export const countryCodes = [
+  { code: "+506", country: "Costa Rica", flag: "🇨🇷" },
   { code: '+1', country: 'Estados Unidos', flag: '🇺🇸' },
   { code: '+34', country: 'España', flag: '🇪🇸' },
   { code: '+44', country: 'Reino Unido', flag: '🇬🇧' },

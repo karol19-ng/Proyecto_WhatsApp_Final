@@ -6,7 +6,6 @@ export interface IOTP extends Document {
   verified: boolean;
   attempts: number;
   expiresAt: Date;
-  createdAt: Date;
 }
 
 const OTPSchema = new Schema<IOTP>(
@@ -20,7 +19,24 @@ const OTPSchema = new Schema<IOTP>(
   { timestamps: true }
 );
 
-// Auto-eliminar OTPs expirados
 OTPSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export default mongoose.model<IOTP>("OTP", OTPSchema);
+export const OTP = mongoose.model<IOTP>("OTP", OTPSchema);
+
+export interface IRegisteredPhone extends Document {
+  phone: string;
+  name: string;
+}
+
+const RegisteredPhoneSchema = new Schema<IRegisteredPhone>(
+  {
+    phone: { type: String, required: true, unique: true },
+    name: { type: String, default: "" },
+  },
+  { timestamps: true }
+);
+
+export const RegisteredPhone = mongoose.model<IRegisteredPhone>(
+  "RegisteredPhone",
+  RegisteredPhoneSchema
+);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { GlowButton } from "@/components/common/GlowButton";
 import {
   ChevronDown,
@@ -13,7 +14,7 @@ import {
 import { countryCodes } from "@/data/mockData";
 
 const OTP_SERVICE =
-  import.meta.env.VITE_OTP_SERVICE_URL || "http://localhost:5000";
+  import.meta.env.VITE_OTP_SERVICE_URL || "https://cr4j9v-5000.csb.app";
 
 const phoneLengths: Record<string, number> = {
   "+1": 10,
@@ -261,6 +262,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess,
   onGoToRegister,
 }) => {
+  const { login } = useAuth();
   const [step, setStep] = useState<"phone" | "verify">("phone");
   const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -323,6 +325,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         setError(data.error || "Código incorrecto.");
         return;
       }
+      await login(fullPhone, code);
       setShowNotification(false);
       onLoginSuccess();
     } catch {

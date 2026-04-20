@@ -27,9 +27,7 @@ const io = new Server(server, {
 // Usamos una función que refleja el origin del request para permitir
 // cualquier origen (necesario en CodeSandbox con puertos distintos).
 const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    callback(null, origin || "*");
-  },
+  origin: "https://zucchini-fulfillment-production-f7ed.up.railway.app",
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
